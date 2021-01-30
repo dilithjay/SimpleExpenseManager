@@ -3,6 +3,8 @@ package lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl;
 import android.content.Context;
 import android.database.Cursor;
 
+import java.io.Serializable;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,20 +13,22 @@ import java.util.Locale;
 
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.DatabaseHelper;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.TransactionDAO;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
 
-public class TransactionDAOImpl implements TransactionDAO {
+public class TransactionDAOImpl implements TransactionDAO, Serializable {
     private final DatabaseHelper db;
-    private Context context;
+    private final DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.US);
 
-    public TransactionDAOImpl() {
-        db = new DatabaseHelper(context);
+    public TransactionDAOImpl(DatabaseHelper db) {
+        this.db = db;
     }
 
     @Override
     public void logTransaction(Date date, String accountNo, ExpenseType expenseType, double amount) {
-        db.insertTransaction(date.toString(), accountNo, expenseType.toString(), amount);
+        db.insertTransaction(formatter.format(date), accountNo, expenseType, amount);
+
     }
 
     @Override
@@ -40,17 +44,17 @@ public class TransactionDAOImpl implements TransactionDAO {
     }
 
     private List<Transaction> convertTransactions(Cursor cursor){
-        List<Transaction> transactions = new ArrayList<Transaction>();
+        List<Transaction> transactions = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
                 Date date;
                 try {
-                    date = new SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(cursor.getString(1));
+                    date = formatter.parse(cursor.getString(1));
                 } catch (Exception ignored) { date = null; }
                 ExpenseType expenseType;
                 if (cursor.getString(3).equals("EXPENSE")) expenseType = ExpenseType.EXPENSE;
                 else expenseType = ExpenseType.INCOME;
-                double amount = Float.parseFloat(cursor.getString(3));
+                double amount = Float.parseFloat(cursor.getString(4));
                 Transaction trxn = new Transaction(date, cursor.getString(2), expenseType, amount);
                 transactions.add(trxn);
             } while (cursor.moveToNext());

@@ -1,8 +1,11 @@
 package lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.database.Cursor;
+import android.widget.Toast;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,12 +15,11 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.exception.InvalidAccountExcep
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 
-public class AccountDAOImpl implements AccountDAO {
+public class AccountDAOImpl implements AccountDAO, Serializable {
     private final DatabaseHelper db;
-    private Context context;
 
-    public AccountDAOImpl() {
-        db = new DatabaseHelper(context);
+    public AccountDAOImpl(DatabaseHelper db) {
+        this.db = db;
     }
 
     @Override
@@ -73,7 +75,12 @@ public class AccountDAOImpl implements AccountDAO {
     public void updateBalance(String accountNo, ExpenseType expenseType, double amount) throws InvalidAccountException {
         if (expenseType == ExpenseType.EXPENSE) amount = -amount;
         Account acc = getAccount(accountNo);
-        acc.setBalance(acc.getBalance() + amount);
+        double balance = acc.getBalance() + amount;
+        if (balance < 0) {
+            System.out.println("Balance Insufficient");
+            return;
+        }
+        acc.setBalance(balance);
         db.updateBalance(acc);
     }
 }

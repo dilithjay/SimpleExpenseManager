@@ -3,10 +3,12 @@ package lk.ac.mrt.cse.dbs.simpleexpensemanager.data;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.Nullable;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,8 +21,8 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
 
-public class DatabaseHelper extends SQLiteOpenHelper {
-    public static  final String DB_NAME = "Expenses.db";
+public class DatabaseHelper extends SQLiteOpenHelper implements Serializable {
+    public static  final String DB_NAME = "180259B";
 
     public DatabaseHelper(@Nullable Context context) {
         super(context, DB_NAME, null, 1);
@@ -28,8 +30,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE account (accountNo TEXT PRIMARY KEY, bankName TEXT, name TEXT, balance REAL)");
-        db.execSQL("CREATE TABLE trxn (transactionID INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, accountNo TEXT, expenseType TEXT, amount REAL)");
+        db.execSQL("CREATE TABLE account (accountNo TEXT PRIMARY KEY," +
+                "bankName TEXT," +
+                "name TEXT," +
+                "balance REAL CHECK(balance >= 0))");
+        db.execSQL("CREATE TABLE trxn (transactionID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "date TEXT," +
+                "accountNo TEXT," +
+                "expenseType TEXT," +
+                "amount REAL)");
     }
 
     @Override
@@ -52,7 +61,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getAccount(String accNo){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM account WHERE accountNo = " + accNo, null);
+        return db.rawQuery("SELECT * FROM account WHERE accountNo = ?", new String[]{accNo});
     }
 
     public Cursor getAccountList() {
@@ -83,12 +92,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    public  boolean insertTransaction(String date, String accNo, String expenseType, double amount) {
+    public  boolean insertTransaction(String date, String accNo, ExpenseType expenseType, double amount) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("date", date);
         contentValues.put("accountNo", accNo);
-        contentValues.put("expenseType", expenseType);
+        contentValues.put("expenseType", expenseType.toString());
         contentValues.put("amount", amount);
         db.insert("trxn", null, contentValues);
         return true;
@@ -101,12 +110,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public  Cursor getPaginatedTransaction(int limit) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM trxn ORDER BY transactionID LIMIT " + limit, null);
+        return db.rawQuery("SELECT * FROM trxn ORDER BY date DESC LIMIT ?", new String[]{String.valueOf(limit)});
     }
 
     private boolean checkAvailable(String accNo) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM account WHERE accountNo = " + accNo, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM account WHERE accountNo = ?", new String[]{accNo});
         int count = cursor.getCount();
         cursor.close();
         return count > 0;
