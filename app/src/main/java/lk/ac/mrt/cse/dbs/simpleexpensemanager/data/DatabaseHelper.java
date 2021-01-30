@@ -50,7 +50,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public Cursor getAccount(String accNo) throws InvalidAccountException {
+    public Cursor getAccount(String accNo){
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT * FROM account WHERE accountNo = " + accNo, null);
     }
@@ -67,16 +67,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void removeAccount(String accNo) throws InvalidAccountException {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM account", null);
-        if (cursor.getCount() > 0)
+        if (checkAvailable(accNo))
             db.delete("account", "accountNo" + " = ?", new String[] {accNo});
         else
             throw new InvalidAccountException("Account does not exist");
-        cursor.close();
         db.close();
     }
 
     public void updateBalance(Account acc) throws InvalidAccountException {
+        if (!checkAvailable(acc.getAccountNo())) throw new InvalidAccountException("Account does not exist");
         ContentValues cv = new ContentValues();
         cv.put("balance", acc.getBalance());
         SQLiteDatabase db = this.getWritableDatabase();
@@ -98,5 +97,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Cursor getTransactionList() {
         SQLiteDatabase db = this.getReadableDatabase();
         return  db.rawQuery("SELECT * FROM trxn", null);
+    }
+
+    public  Cursor getPaginatedTransaction(int limit) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM trxn ORDER BY transactionID LIMIT " + limit, null);
+    }
+
+    private boolean checkAvailable(String accNo) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM account WHERE accountNo = " + accNo, null);
+        int count = cursor.getCount();
+        cursor.close();
+        return count > 0;
     }
 }

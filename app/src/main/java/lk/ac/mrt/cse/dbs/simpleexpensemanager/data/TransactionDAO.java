@@ -43,7 +43,7 @@ public interface TransactionDAO {
      *
      * @return - a list of all the transactions
      */
-    public List<Transaction> getAllTransactionLogs() throws ParseException;
+    public List<Transaction> getAllTransactionLogs();
 
     /***
      * Return a limited amount of transactions logged.

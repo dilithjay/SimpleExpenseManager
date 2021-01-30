@@ -1,4 +1,4 @@
-package lk.ac.mrt.cse.dbs.simpleexpensemanager.data;
+package lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -6,6 +6,8 @@ import android.database.Cursor;
 import java.util.ArrayList;
 import java.util.List;
 
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.AccountDAO;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.DatabaseHelper;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.exception.InvalidAccountException;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
@@ -21,7 +23,7 @@ public class AccountDAOImpl implements AccountDAO {
     @Override
     public List<String> getAccountNumbersList() {
         Cursor cursor = db.getAccountList();
-        List<String> accNums = new ArrayList<String>();
+        List<String> accNums = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
                 String accNo = cursor.getString(0);
@@ -35,7 +37,7 @@ public class AccountDAOImpl implements AccountDAO {
     @Override
     public List<Account> getAccountsList() {
         Cursor cursor = db.getAccountList();
-        List<Account> accounts = new ArrayList<Account>();
+        List<Account> accounts = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
                 Account acc = new Account(cursor.getString(0), cursor.getString(1), cursor.getString(2), Float.parseFloat(cursor.getString(3)));
